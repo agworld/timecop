@@ -7,6 +7,8 @@ rescue LoadError
   require 'mocha'
 end
 
+require File.join(File.dirname(__FILE__), '..', 'lib', 'timecop')
+
 class Test::Unit::TestCase
 
   private

@@ -104,6 +104,10 @@ class Timecop
       instance.instance_variable_get(:@_stack).last
     end
 
+    def clear_cache
+      instance.instance_variable_get(:@_stack).each { |stack_item| stack_item.clear_cache }
+    end
+
     private
     def send_travel(mock_type, *args, &block)
       val = instance.send(:travel, mock_type, *args, &block)

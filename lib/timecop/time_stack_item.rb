@@ -6,12 +6,17 @@ class Timecop
 
       def initialize(mock_type, *args)
         raise "Unknown mock_type #{mock_type}" unless [:freeze, :travel, :scale].include?(mock_type)
+        @cache = {}
         @scaling_factor = args.shift if mock_type == :scale
         @mock_type      = mock_type
         @time           = parse_time(*args)
         @time_was       = Time.now_without_mock_time
         @travel_offset  = compute_travel_offset
         @dst_adjustment = compute_dst_adjustment(@time)
+      end
+
+      def clear_cache
+        @cache.clear
       end
 
       def year
@@ -51,16 +56,8 @@ class Timecop
       end
 
       def time(klass = time_klass) #:nodoc:
-        begin
-          actual_time = klass.at(@time)
-          calculated_time = klass.at(@time.to_f)
-          time = times_are_equal_within_epsilon(actual_time, calculated_time, 1) ? actual_time : calculated_time
-        rescue
-          time = klass.at(@time.to_f)
-        end
-
         if travel_offset.nil?
-          time
+          @cache[klass] ||= _time(klass)
         elsif scaling_factor.nil?
           klass.at(Time.now_without_mock_time + travel_offset)
         else
@@ -154,5 +151,16 @@ class Timecop
       def time_klass
         Time.respond_to?(:zone) && Time.zone ? Time.zone : Time
       end
+
+      def _time(klass) #:nodoc:
+        begin
+          actual_time = klass.at(@time)
+          calculated_time = klass.at(@time.to_f)
+          times_are_equal_within_epsilon(actual_time, calculated_time, 1) ? actual_time : calculated_time
+        rescue
+          klass.at(@time.to_f)
+        end
+      end
+
     end
   end

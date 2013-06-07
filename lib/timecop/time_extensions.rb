@@ -26,7 +26,16 @@ class Time #:nodoc:
     end
 
     alias_method :new, :new_with_mock_time
+
   end
+
+  alias_method :utc_without_mock_time, :utc
+  def utc_with_mock_time
+    Timecop.clear_cache
+    utc_without_mock_time
+  end
+  alias_method :utc, :utc_with_mock_time
+
 end 
 
 if Object.const_defined?(:Date) && Date.respond_to?(:today)

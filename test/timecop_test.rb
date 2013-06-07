@@ -1,6 +1,5 @@
 require 'date'
 require File.join(File.dirname(__FILE__), "test_helper")
-require File.join(File.dirname(__FILE__), '..', 'lib', 'timecop')
 
 class TestTimecop < Test::Unit::TestCase
   def teardown
@@ -435,4 +434,18 @@ class TestTimecop < Test::Unit::TestCase
       Timecop.send_travel(:travel, Time.now - 100)
     end
   end
+
+  def test_not_too_slow
+    require 'benchmark'
+    runtime_without = Benchmark.realtime do
+      100000.times { x = Time.now }
+    end
+    runtime_with = Benchmark.realtime do
+      Timecop.freeze(2008, 10, 10, 10, 10, 10) do
+        100000.times { x = Time.now }
+      end
+    end
+    assert_operator runtime_with, :<, runtime_without * 1.1
+  end
+
 end
